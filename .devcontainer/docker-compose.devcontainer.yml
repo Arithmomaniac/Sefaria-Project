@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        - USER_UID=${UID:-1000}
+        - USER_GID=${GID:-1000}
+    # Keep container alive for devcontainer
+    command: sleep infinity
+    volumes:
+      - ..:/app:cached
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+    environment:
+      - DJANGO_SETTINGS_MODULE=sefaria.settings
+      - PYTHONUNBUFFERED=1
+      - NODE_ENV=development
+    # Ensure all services are ready before web container starts
+    depends_on:
+      - db
+      - cache
+      - postgres
+    # Run as root in development for convenience
+    user: root
+
+  # No changes needed for other services - they inherit from base docker-compose.yml
+  db:
+  cache:
+  postgres:
+  node:
