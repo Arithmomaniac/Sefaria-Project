@@ -1,89 +1,137 @@
 {
+  // BASIC CONFIGURATION
+  // ====================
+  
+  // [RECOMMENDATION] Descriptive name for the devcontainer
+  // Source: Standard devcontainer practice
   "name": "Sefaria Development Environment",
   
-  // Use Docker Compose to orchestrate multiple services
+  // [DERIVED FROM docker-compose.yml] Uses existing docker-compose infrastructure
+  // Source: docker-compose.yml defines services: web, db, cache, node, postgres
+  // Reason: Leverages existing service definitions rather than duplicating them
   "dockerComposeFile": [
-    "../docker-compose.yml",
-    "docker-compose.devcontainer.yml"
+    "../docker-compose.yml",                    // [DERIVED] Base services from existing config
+    "docker-compose.devcontainer.yml"           // [ADDED] Development-specific overrides
   ],
   
-  // Connect to the 'web' service
+  // [DERIVED FROM docker-compose.yml] Connect to the 'web' service
+  // Source: docker-compose.yml has 'web' as the main Django application service
+  // Reason: This is where the Django app and development tools should run
   "service": "web",
   
-  // Set the workspace folder inside the container
+  // [DERIVED FROM Dockerfile] Workspace folder matches container working directory
+  // Source: Dockerfile line 5: "WORKDIR /app"
+  // Source: docker-compose.yml mounts current dir to /app
+  // Reason: Maintains consistency with existing container configuration
   "workspaceFolder": "/app",
   
-  // Stop all services when closing VS Code
+  // [RECOMMENDATION] Stop all compose services when VS Code closes
+  // Source: Standard practice for multi-service devcontainers
+  // Reason: Clean shutdown of all services (MongoDB, Redis, PostgreSQL, Node)
   "shutdownAction": "stopCompose",
   
-  // Features to add to the container
+  
+  // DEVCONTAINER FEATURES
+  // =====================
+  // [RECOMMENDATION] Add development utilities not in base Dockerfile
+  // Source: Standard devcontainer best practices for development workflow
+  
   "features": {
+    // Git is needed for version control inside the container
     "ghcr.io/devcontainers/features/git:1": {
       "version": "latest"
     },
+    
+    // GitHub CLI for interacting with GitHub from within container
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "latest"
     },
+    
+    // Common utilities including zsh for better developer experience
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
       "configureZshAsDefaultShell": true,
-      "username": "root"
+      "username": "root"              // [DERIVED] Matches container user from Dockerfile
     }
   },
   
-  // Configure VS Code settings and extensions
+  
+  // VS CODE CUSTOMIZATIONS
+  // ======================
+  
   "customizations": {
     "vscode": {
+      
+      // EXTENSIONS
+      // ----------
+      // [RECOMMENDATION] Extensions for Python/Django/React development
+      // Source: Analysis of project tech stack from requirements.txt and package.json
+      
       "extensions": [
-        // Python development
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-python.debugpy",
+        // Python Development
+        // [DERIVED] Python 3.9 is core language (dev_docker/Dockerfile, requirements.txt)
+        "ms-python.python",           // Python IntelliSense, debugging, linting
+        "ms-python.vscode-pylance",   // Fast, feature-rich language server
+        "ms-python.debugpy",          // Python debugger
         
-        // Django support
-        "batisteo.vscode-django",
+        // Django Support
+        // [DERIVED] Django 1.11 detected in requirements.txt
+        "batisteo.vscode-django",     // Django template syntax highlighting
         
-        // JavaScript/React development
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        // JavaScript/React Development
+        // [DERIVED] React 16.8.6 in package.json, extensive JS/JSX codebase
+        "dbaeumer.vscode-eslint",     // JavaScript/TypeScript linting
+        "esbenp.prettier-vscode",     // Code formatting
         
-        // Database tools
-        "mongodb.mongodb-vscode",
+        // Database Tools
+        // [DERIVED] MongoDB 4.4 from docker-compose.yml
+        "mongodb.mongodb-vscode",     // MongoDB connection and query tools
         
-        // Docker support
+        // Docker Support
+        // [RECOMMENDATION] Useful for managing containers while developing
         "ms-azuretools.vscode-docker",
         
-        // Git tools
+        // Git Tools
+        // [RECOMMENDATION] Enhanced Git visualization
         "eamodio.gitlens",
         
-        // General utilities
+        // General Utilities
+        // [RECOMMENDATION] Spell checking for documentation and comments
         "streetsidesoftware.code-spell-checker"
       ],
       
+      
+      // SETTINGS
+      // --------
+      
       "settings": {
-        // Python settings
+        
+        // Python Configuration
+        // [DERIVED] Python path from devcontainer Dockerfile installation
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.linting.enabled": true,
-        "python.linting.pylintEnabled": false,
-        "python.formatting.provider": "none",
-        "python.analysis.typeCheckingMode": "basic",
+        "python.linting.pylintEnabled": false,        // [RECOMMENDATION] Avoid pylint overhead
+        "python.formatting.provider": "none",         // [RECOMMENDATION] Use external formatter
+        "python.analysis.typeCheckingMode": "basic",  // [RECOMMENDATION] Basic type checking
         
-        // Editor settings
+        // Editor Settings
+        // [RECOMMENDATION] Standard professional development practices
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
         },
-        "files.eol": "\n",
-        "files.insertFinalNewline": true,
-        "files.trimTrailingWhitespace": true,
+        "files.eol": "\n",                            // [RECOMMENDATION] Unix line endings
+        "files.insertFinalNewline": true,             // [RECOMMENDATION] POSIX standard
+        "files.trimTrailingWhitespace": true,         // [RECOMMENDATION] Clean code
         
-        // Python-specific formatting
+        // Language-Specific Formatting
+        // [DERIVED] Python uses 4 spaces (standard Python convention, PEP 8)
         "[python]": {
           "editor.defaultFormatter": "ms-python.python",
           "editor.tabSize": 4
         },
         
-        // JavaScript/JSX formatting
+        // [DERIVED] JavaScript/React typically uses 2 spaces (common in React ecosystem)
         "[javascript]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.tabSize": 2
@@ -93,85 +141,127 @@
           "editor.tabSize": 2
         },
         
-        // JSON formatting
+        // [RECOMMENDATION] JSON standard is 2 spaces
         "[json]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.tabSize": 2
         },
         
-        // Terminal settings
+        // Terminal Settings
+        // [RECOMMENDATION] Use zsh added via features
         "terminal.integrated.defaultProfile.linux": "zsh",
         
-        // File associations
+        // File Associations
+        // [DERIVED] Project uses Django templates (HTML) and React (JSX)
         "files.associations": {
-          "*.html": "html",
-          "*.js": "javascriptreact"
+          "*.html": "html",                          // Django templates
+          "*.js": "javascriptreact"                  // React components in .js files
         },
         
-        // Exclude patterns
+        // Exclude Patterns
+        // [DERIVED] Standard Python/Node.js build artifacts and caches
         "files.exclude": {
-          "**/__pycache__": true,
-          "**/*.pyc": true,
-          "**/.pytest_cache": true,
-          "**/node_modules": true,
-          "**/.git": true
+          "**/__pycache__": true,                    // Python bytecode cache
+          "**/*.pyc": true,                          // Python compiled files
+          "**/.pytest_cache": true,                  // Pytest cache
+          "**/node_modules": true,                   // Node.js dependencies
+          "**/.git": true                            // Git internal directory
         },
         
-        // Search exclude patterns
+        // Search Exclude Patterns
+        // [DERIVED] Exclude large build artifacts from search
         "search.exclude": {
-          "**/node_modules": true,
-          "**/static/bundles": true,
-          "**/*.log": true
+          "**/node_modules": true,                   // Node.js dependencies
+          "**/static/bundles": true,                 // Webpack output (from package.json scripts)
+          "**/*.log": true                           // Log files
         }
       }
     }
   },
   
-  // Forward ports for web access
-  "forwardPorts": [8000, 3000, 27017, 6379, 5433],
   
-  // Configure port attributes
+  // PORT FORWARDING
+  // ===============
+  // [DERIVED FROM docker-compose.yml] All ports match existing service definitions
+  
+  "forwardPorts": [
+    8000,   // [DERIVED] Django web (docker-compose.yml web service, Dockerfile EXPOSE 8000)
+    3000,   // [DERIVED] Node.js SSR (docker-compose.yml node service)
+    27017,  // [DERIVED] MongoDB (docker-compose.yml db service)
+    6379,   // [DERIVED] Redis (docker-compose.yml cache service)
+    5433    // [DERIVED] PostgreSQL (docker-compose.yml postgres service, mapped from internal 5432)
+  ],
+  
+  // Port Attributes
+  // [RECOMMENDATION] User-friendly labels and notification preferences
   "portsAttributes": {
     "8000": {
       "label": "Django Web Server",
-      "onAutoForward": "notify",
+      "onAutoForward": "notify",      // [RECOMMENDATION] Notify user when Django starts
       "protocol": "http"
     },
     "3000": {
       "label": "Node.js SSR Server",
-      "onAutoForward": "silent",
+      "onAutoForward": "silent",      // [RECOMMENDATION] Silent for optional SSR service
       "protocol": "http"
     },
     "27017": {
       "label": "MongoDB",
-      "onAutoForward": "silent"
+      "onAutoForward": "silent"       // [RECOMMENDATION] Database, no user notification needed
     },
     "6379": {
       "label": "Redis Cache",
-      "onAutoForward": "silent"
+      "onAutoForward": "silent"       // [RECOMMENDATION] Cache, no user notification needed
     },
     "5433": {
       "label": "PostgreSQL",
-      "onAutoForward": "silent"
+      "onAutoForward": "silent"       // [RECOMMENDATION] Database, no user notification needed
     }
   },
   
-  // Lifecycle scripts
-  "postCreateCommand": "bash .devcontainer/scripts/postCreate.sh",
-  "postStartCommand": "bash .devcontainer/scripts/postStart.sh",
   
-  // Container user
+  // LIFECYCLE SCRIPTS
+  // =================
+  // [RECOMMENDATION] Automated setup and status scripts
+  
+  "postCreateCommand": "bash .devcontainer/scripts/postCreate.sh",
+  // Runs once after container creation:
+  // - Waits for services (MongoDB, Redis, PostgreSQL)
+  // - Configures local_settings.py
+  // - Guides MongoDB dump restoration
+  // - Runs Django migrations
+  // - Builds frontend assets
+  
+  "postStartCommand": "bash .devcontainer/scripts/postStart.sh",
+  // Runs on each container start:
+  // - Quick health checks
+  // - Displays helpful commands
+  
+  
+  // CONTAINER USER
+  // ==============
+  // [DERIVED FROM Dockerfile] Container runs as root
+  // Source: No USER directive in Dockerfile means it runs as root
+  // Note: Could be changed to non-root for better security, but kept as root for simplicity
   "remoteUser": "root",
   
-  // Environment variables
+  
+  // ENVIRONMENT VARIABLES
+  // =====================
+  // [DERIVED] Core Python/Node environment variables
+  
   "remoteEnv": {
-    "PYTHONUNBUFFERED": "1",
-    "NODE_ENV": "development"
+    "PYTHONUNBUFFERED": "1",          // [DERIVED] Standard for Django development (shows logs immediately)
+    "NODE_ENV": "development"         // [RECOMMENDATION] Standard Node.js development flag
   },
   
-  // Mount additional volumes
+  
+  // PERSISTENT VOLUMES
+  // ==================
+  // [RECOMMENDATION] Persist bash history across container rebuilds
+  
   "mounts": [
-    // Persist bash history
     "source=sefaria-bashhistory,target=/root/.bash_history,type=volume"
+    // Preserves command history for better developer experience
   ]
 }

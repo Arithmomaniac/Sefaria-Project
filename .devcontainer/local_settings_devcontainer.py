@@ -1,11 +1,20 @@
 # Sefaria Development Container Local Settings
 # This file is automatically copied to sefaria/local_settings.py during devcontainer setup
+#
+# DERIVATION NOTES:
+# - Based on sefaria/local_settings_example.py structure
+# - Database/service hostnames derived from docker-compose.yml service names
+# - Settings optimized for container-based development environment
 
 # ====================
 # Core Settings
 # ====================
 
+# [DERIVED] DEBUG=True from local_settings_example.py for development
 DEBUG = True
+
+# [RECOMMENDATION] Allow all hosts in container environment
+# Reason: Container may be accessed via various hostnames/IPs
 ALLOWED_HOSTS = ['*']
 
 # ====================
@@ -13,19 +22,25 @@ ALLOWED_HOSTS = ['*']
 # ====================
 
 # PostgreSQL - Used by Django for authentication and sessions
+# [DERIVED] PostgreSQL configuration from docker-compose.yml postgres service
+# Service: postgres (docker-compose.yml)
+# Environment variables: POSTGRES_USER=admin, POSTGRES_PASSWORD=admin, POSTGRES_DB=sefaria
+# Port mapping: 5433:5432
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'sefaria',
         'USER': 'admin',
         'PASSWORD': 'admin',
-        'HOST': 'postgres',  # Docker Compose service name
-        'PORT': '',
+        'HOST': 'postgres',  # [DERIVED] Docker Compose service name from docker-compose.yml
+        'PORT': '',          # [DERIVED] Use default internal port (5432), not the external mapping
     }
 }
 
 # MongoDB - Main database for Sefaria texts and data
-MONGO_HOST = "db"  # Docker Compose service name
+# [DERIVED] MongoDB configuration from docker-compose.yml db service
+# Service: db, image: mongo:4.4, port: 27017
+MONGO_HOST = "db"  # [DERIVED] Docker Compose service name from docker-compose.yml
 SEFARIA_DB = "sefaria"
 SEFARIA_DB_USER = ""
 SEFARIA_DB_PASSWORD = ""
@@ -35,14 +50,18 @@ SEFARIA_DB_PASSWORD = ""
 # ====================
 
 # Redis configuration for caching
-MULTISERVER_REDIS_SERVER = "cache"  # Docker Compose service name
+# [DERIVED] Redis service from docker-compose.yml cache service
+# Service: cache, image: redis:latest, port: 6379
+MULTISERVER_REDIS_SERVER = "cache"  # [DERIVED] Docker Compose service name
 REDIS_HOST = "cache"
 REDIS_PORT = 6379
 
+# [DERIVED] Cache structure from local_settings_example.py Redis section
+# Modified to use container service name instead of localhost
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://cache:6379/0",
+        "LOCATION": "redis://cache:6379/0",  # [DERIVED] Service name 'cache' from docker-compose.yml
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PARSER_CLASS": "redis.connection.HiredisParser",
@@ -52,7 +71,7 @@ CACHES = {
     },
     "shared": {
         "BACKEND": "django_redis.cache.RedisCache", 
-        "LOCATION": "redis://cache:6379/1",
+        "LOCATION": "redis://cache:6379/1",  # [DERIVED] Service name 'cache' from docker-compose.yml
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PARSER_CLASS": "redis.connection.HiredisParser",
@@ -63,6 +82,7 @@ CACHES = {
 }
 
 # Session configuration
+# [DERIVED] From local_settings_example.py
 SESSION_CACHE_ALIAS = "default"
 USER_AGENTS_CACHE = 'default'
 SHARED_DATA_CACHE_ALIAS = 'shared'
@@ -71,14 +91,18 @@ SHARED_DATA_CACHE_ALIAS = 'shared'
 # Node.js Server-Side Rendering
 # ====================
 
+# [DERIVED] Node configuration from docker-compose.yml node service
+# Service: node, image: node:latest, port: 3000
+# [DERIVED] USE_NODE from local_settings_example.py
 USE_NODE = True
-NODE_HOST = "http://node:3000"  # Docker Compose service name
+NODE_HOST = "http://node:3000"  # [DERIVED] Docker Compose service name from docker-compose.yml
 NODE_TIMEOUT = 10
 
 # ====================
 # reCAPTCHA Configuration
 # ====================
 
+# [DERIVED] From local_settings_example.py (commented section)
 # Use test keys for development to suppress warnings
 SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
 
@@ -86,6 +110,8 @@ SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
 # Logging Configuration
 # ====================
 
+# [RECOMMENDATION] Simplified logging for development
+# Based on local_settings_example.py but simplified for container environment
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -103,7 +129,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/app/log/sefaria.log',
+            'filename': '/app/log/sefaria.log',  # [DERIVED] Log directory from installation docs
             'formatter': 'standard'
         },
     },
@@ -129,13 +155,15 @@ LOGGING = {
 # Email Configuration (Development)
 # ====================
 
-# Use console backend for development
+# [DERIVED] From local_settings_example.py EMAIL_BACKEND
+# Use console backend for development (prints emails to console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ====================
 # Static Files
 # ====================
 
+# [DERIVED] Standard Django static file settings
 STATIC_URL = '/static/'
 STATIC_ROOT = '/app/static/'
 
@@ -143,6 +171,7 @@ STATIC_ROOT = '/app/static/'
 # Security Settings (Development)
 # ====================
 
+# [DERIVED] SECRET_KEY required by Django (from local_settings_example.py)
 # Less strict security for development
 SECRET_KEY = 'dev-secret-key-change-in-production'
 CSRF_COOKIE_SECURE = False
@@ -152,7 +181,9 @@ SESSION_COOKIE_SECURE = False
 # Celery Configuration
 # ====================
 
-# Use Redis as broker for Celery
+# [DERIVED] Celery configuration from local_settings_example.py
+# Use Redis as broker for Celery (same Redis instance as cache)
+# [DERIVED] Service name 'cache' from docker-compose.yml
 CELERY_BROKER_URL = 'redis://cache:6379/2'
 CELERY_RESULT_BACKEND = 'redis://cache:6379/2'
 
@@ -160,8 +191,9 @@ CELERY_RESULT_BACKEND = 'redis://cache:6379/2'
 # Search Configuration
 # ====================
 
-# Elasticsearch is not included in the basic devcontainer setup
+# [RECOMMENDATION] Elasticsearch is not included in the basic devcontainer setup
 # Uncomment and configure if you need Elasticsearch for development
+# [DERIVED] SEARCH_URL pattern from local_settings_example.py
 # SEARCH_HOST = "elasticsearch"
 # SEARCH_ADMIN = "http://elasticsearch:9200"
 

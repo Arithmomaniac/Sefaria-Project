@@ -1,33 +1,61 @@
+# Sefaria Development Container - Docker Compose Override
+# This file extends the base docker-compose.yml with devcontainer-specific settings
+#
+# DERIVATION NOTES:
+# - Uses existing services from docker-compose.yml (db, cache, postgres, node)
+# - Overrides only the 'web' service for development
+# - All service names and dependencies match docker-compose.yml
+
 version: '3'
 
 services:
   web:
+    # [RECOMMENDATION] Build from devcontainer Dockerfile instead of main Dockerfile
+    # Reason: Devcontainer Dockerfile includes development tools (mongosh, redis-cli, etc.)
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     
-    # Override the default command to keep container running
+    # [RECOMMENDATION] Override default command to keep container running
+    # Reason: Devcontainer needs container alive for VS Code to attach
+    # Original Dockerfile CMD: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     command: sleep infinity
     
-    # Mount the workspace
+    # [DERIVED] Volume mounts match docker-compose.yml
+    # Source: docker-compose.yml web service: "volumes: - .:/app"
     volumes:
       - ..:/app:cached
-      # Prevent node_modules from being overwritten
+      # [RECOMMENDATION] Prevent node_modules from being overwritten by host
+      # Reason: Container-built node_modules may differ from host (especially on Windows)
       - /app/node_modules
     
     # Development environment variables
+    # [DERIVED] DJANGO_SETTINGS_MODULE standard for Django projects
+    # [DERIVED] PYTHONUNBUFFERED standard for Django development (shows logs immediately)
+    # [RECOMMENDATION] NODE_ENV=development for Node.js development mode
+    # [RECOMMENDATION] PYTHONDONTWRITEBYTECODE prevents .pyc file generation
     environment:
       - DJANGO_SETTINGS_MODULE=sefaria.settings
       - PYTHONUNBUFFERED=1
       - NODE_ENV=development
       - PYTHONDONTWRITEBYTECODE=1
     
-    # Ensure dependencies start first
+    # [DERIVED] Service dependencies from docker-compose.yml
+    # Source: docker-compose.yml web service depends_on: db, cache, postgres
+    # Note: 'node' service not included as dependency to allow independent startup
     depends_on:
       - db
       - cache
       - postgres
     
-    # Keep stdin open and allocate pseudo-TTY for interactive development
+    # [RECOMMENDATION] Keep stdin open and allocate pseudo-TTY for interactive development
+    # Reason: Allows interactive commands and better terminal experience
     stdin_open: true
     tty: true
+
+# NOTE: Other services (db, cache, postgres, node) inherit from base docker-compose.yml
+# [DERIVED] Service definitions from docker-compose.yml:
+# - db: MongoDB 4.4 on port 27017
+# - cache: Redis latest on port 6379
+# - postgres: PostgreSQL with admin/admin credentials on port 5433
+# - node: Node.js latest on port 3000
