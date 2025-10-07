@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    
+    # Override the default command to keep container running
+    command: sleep infinity
+    
+    # Mount the workspace
+    volumes:
+      - ..:/app:cached
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+    
+    # Development environment variables
+    environment:
+      - DJANGO_SETTINGS_MODULE=sefaria.settings
+      - PYTHONUNBUFFERED=1
+      - NODE_ENV=development
+      - PYTHONDONTWRITEBYTECODE=1
+    
+    # Ensure dependencies start first
+    depends_on:
+      - db
+      - cache
+      - postgres
+    
+    # Keep stdin open and allocate pseudo-TTY for interactive development
+    stdin_open: true
+    tty: true

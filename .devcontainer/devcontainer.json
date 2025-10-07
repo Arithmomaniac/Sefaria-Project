@@ -1,0 +1,177 @@
+{
+  "name": "Sefaria Development Environment",
+  
+  // Use Docker Compose to orchestrate multiple services
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.devcontainer.yml"
+  ],
+  
+  // Connect to the 'web' service
+  "service": "web",
+  
+  // Set the workspace folder inside the container
+  "workspaceFolder": "/app",
+  
+  // Stop all services when closing VS Code
+  "shutdownAction": "stopCompose",
+  
+  // Features to add to the container
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "username": "root"
+    }
+  },
+  
+  // Configure VS Code settings and extensions
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Python development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        
+        // Django support
+        "batisteo.vscode-django",
+        
+        // JavaScript/React development
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        
+        // Database tools
+        "mongodb.mongodb-vscode",
+        
+        // Docker support
+        "ms-azuretools.vscode-docker",
+        
+        // Git tools
+        "eamodio.gitlens",
+        
+        // General utilities
+        "streetsidesoftware.code-spell-checker"
+      ],
+      
+      "settings": {
+        // Python settings
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.formatting.provider": "none",
+        "python.analysis.typeCheckingMode": "basic",
+        
+        // Editor settings
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "files.eol": "\n",
+        "files.insertFinalNewline": true,
+        "files.trimTrailingWhitespace": true,
+        
+        // Python-specific formatting
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python",
+          "editor.tabSize": 4
+        },
+        
+        // JavaScript/JSX formatting
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        "[javascriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        
+        // JSON formatting
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        
+        // Terminal settings
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        
+        // File associations
+        "files.associations": {
+          "*.html": "html",
+          "*.js": "javascriptreact"
+        },
+        
+        // Exclude patterns
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true,
+          "**/.pytest_cache": true,
+          "**/node_modules": true,
+          "**/.git": true
+        },
+        
+        // Search exclude patterns
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/static/bundles": true,
+          "**/*.log": true
+        }
+      }
+    }
+  },
+  
+  // Forward ports for web access
+  "forwardPorts": [8000, 3000, 27017, 6379, 5433],
+  
+  // Configure port attributes
+  "portsAttributes": {
+    "8000": {
+      "label": "Django Web Server",
+      "onAutoForward": "notify",
+      "protocol": "http"
+    },
+    "3000": {
+      "label": "Node.js SSR Server",
+      "onAutoForward": "silent",
+      "protocol": "http"
+    },
+    "27017": {
+      "label": "MongoDB",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis Cache",
+      "onAutoForward": "silent"
+    },
+    "5433": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
+  
+  // Lifecycle scripts
+  "postCreateCommand": "bash .devcontainer/scripts/postCreate.sh",
+  "postStartCommand": "bash .devcontainer/scripts/postStart.sh",
+  
+  // Container user
+  "remoteUser": "root",
+  
+  // Environment variables
+  "remoteEnv": {
+    "PYTHONUNBUFFERED": "1",
+    "NODE_ENV": "development"
+  },
+  
+  // Mount additional volumes
+  "mounts": [
+    // Persist bash history
+    "source=sefaria-bashhistory,target=/root/.bash_history,type=volume"
+  ]
+}
