@@ -13,7 +13,7 @@ services:
     # [RECOMMENDATION] Build from devcontainer Dockerfile instead of main Dockerfile
     # Reason: Devcontainer Dockerfile includes development tools (mongosh, redis-cli, etc.)
     build:
-      context: ..
+      context: .
       dockerfile: .devcontainer/Dockerfile
     
     # [RECOMMENDATION] Override default command to keep container running
@@ -24,7 +24,7 @@ services:
     # [DERIVED] Volume mounts match docker-compose.yml
     # Source: docker-compose.yml web service: "volumes: - .:/app"
     volumes:
-      - ..:/app:cached
+      - .:/app:cached
       # [RECOMMENDATION] Prevent node_modules from being overwritten by host
       # Reason: Container-built node_modules may differ from host (especially on Windows)
       - /app/node_modules

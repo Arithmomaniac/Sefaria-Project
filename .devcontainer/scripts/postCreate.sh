@@ -134,40 +134,23 @@ echo "Step 4: Checking MongoDB database..."
 collection_count=$(mongosh --host db --quiet --eval "db.getMongo().getDBNames().length")
 
 if [ "$collection_count" -le 1 ]; then
-    print_warning "MongoDB is empty - you need to restore a database dump"
+    print_warning "MongoDB is empty - load sample data before continuing"
     echo ""
     echo "======================================"
     echo "MongoDB Database Setup Required"
     echo "======================================"
     echo ""
-    echo "Choose one of the following database dumps:"
+    echo "Run the restore helper script from inside the devcontainer to download"
+    echo "and import a dataset:"
+    echo "   cd /app"
+    echo "   ./.devcontainer/scripts/restore_mongo_dump.sh"
     echo ""
-    # [DERIVED] Dump URLs and descriptions from installation documentation
-    # https://developers.sefaria.org/docs/local-installation-instructions
-    echo "📦 Option 1: Small Dump (Recommended for most development)"
-    echo "   • Size: ~3-4 GB"
-    echo "   • Contains: All texts, no revision history"
-    echo "   • Download command:"
-    echo "     curl -O https://storage.googleapis.com/sefaria-mongo-backup/dump_small.tar.gz"
+    echo "Pass --full if you need revision history, or --help for options."
+    echo "The script handles extracting the dump, running mongorestore, and"
+    echo "creating the history collection when needed."
     echo ""
-    echo "📦 Option 2: Full Dump (Only if you need revision history)"
-    echo "   • Size: Larger"
-    echo "   • Contains: All texts + complete revision history"
-    echo "   • Download command:"
-    echo "     curl -O https://storage.googleapis.com/sefaria-mongo-backup/dump.tar.gz"
-    echo ""
-    # [DERIVED] mongorestore commands from installation documentation
-    echo "After downloading, extract the dump:"
-    echo "   tar -xzf dump_small.tar.gz  # or dump.tar.gz for full dump"
-    echo ""
-    echo "Then restore it to MongoDB:"
-    echo "   mongorestore --host db --port 27017"
-    echo ""
-    # [DERIVED] History collection requirement from installation docs
-    echo "If using the small dump, also create the history collection:"
-    echo "   mongosh --host db --eval 'use sefaria; db.createCollection(\"history\")'"
-    echo ""
-    echo "After restoring the database, you can continue with development!"
+    echo "After the script completes, rerun this setup script or rerun"
+    echo "devcontainer up to finish configuring the environment."
     echo "======================================"
     echo ""
 else
@@ -177,9 +160,8 @@ else
     # [DERIVED] History collection requirement from installation docs
     has_history=$(mongosh --host db sefaria --quiet --eval "db.getCollectionNames().includes('history')")
     if [ "$has_history" = "false" ]; then
-        print_info "Creating empty history collection..."
-        mongosh --host db sefaria --eval "db.createCollection('history')" >/dev/null 2>&1
-        print_success "History collection created"
+        print_info "History collection missing. Run the restore helper script to populate it:"
+        echo "   cd /app && ./.devcontainer/scripts/restore_mongo_dump.sh --small"
     fi
 fi
 

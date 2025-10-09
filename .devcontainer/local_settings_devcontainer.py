@@ -6,6 +6,9 @@
 # - Database/service hostnames derived from docker-compose.yml service names
 # - Settings optimized for container-based development environment
 
+# Import baseline defaults so optional settings expected by Django are populated
+from sefaria.local_settings_example import *  # type: ignore  # noqa
+
 # ====================
 # Core Settings
 # ====================
@@ -40,10 +43,13 @@ DATABASES = {
 # MongoDB - Main database for Sefaria texts and data
 # [DERIVED] MongoDB configuration from docker-compose.yml db service
 # Service: db, image: mongo:4.4, port: 27017
+MONGO_REPLICASET_NAME = None
 MONGO_HOST = "db"  # [DERIVED] Docker Compose service name from docker-compose.yml
+MONGO_PORT = 27017
 SEFARIA_DB = "sefaria"
 SEFARIA_DB_USER = ""
 SEFARIA_DB_PASSWORD = ""
+APSCHEDULER_NAME = "apscheduler"
 
 # ====================
 # Cache Configuration
@@ -64,7 +70,6 @@ CACHES = {
         "LOCATION": "redis://cache:6379/0",  # [DERIVED] Service name 'cache' from docker-compose.yml
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PARSER_CLASS": "redis.connection.HiredisParser",
         },
         "KEY_PREFIX": "sefaria",
         "TIMEOUT": 60 * 60 * 24 * 30,
@@ -74,7 +79,6 @@ CACHES = {
         "LOCATION": "redis://cache:6379/1",  # [DERIVED] Service name 'cache' from docker-compose.yml
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PARSER_CLASS": "redis.connection.HiredisParser",
         },
         "KEY_PREFIX": "sefaria-shared",
         "TIMEOUT": 60 * 60 * 24 * 30,
@@ -202,3 +206,13 @@ CELERY_RESULT_BACKEND = 'redis://cache:6379/2'
 # ====================
 
 # Add any custom settings below this line
+
+# CRM / NationBuilder placeholders to prevent attribute errors during setup
+CRM_TYPE = "NONE"
+NATIONBUILDER_SLUG = ""
+NATIONBUILDER_TOKEN = ""
+NATIONBUILDER_CLIENT_ID = ""
+NATIONBUILDER_CLIENT_SECRET = ""
+
+# Development-friendly failure handling
+FAIL_GRACEFULLY = False
