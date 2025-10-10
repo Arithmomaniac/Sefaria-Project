@@ -12,15 +12,15 @@ Usage: ./restore_mongo_dump.sh [OPTIONS]
 Options:
   --small           Restore the small dump (default).
   --full            Restore the full dump with revision history.
-  --workdir DIR     Directory to store downloaded archives (default: /tmp/sefaria-mongo)
+  --workdir DIR     Directory to store/download archives (default: /app/.devcontainer/sefaria-mongo-backup)
     --keep-archive    Keep the downloaded archive after restore (default: delete)
     --force           Force re-download even if the archive already exists
   -h, --help        Show this help message and exit
 
 Examples:
-  ./restore_mongo_dump.sh                # Download and restore the small dump
-  ./restore_mongo_dump.sh --full         # Download and restore the full dump
-  ./restore_mongo_dump.sh --workdir /app # Store archives inside the repo
+  ./restore_mongo_dump.sh                                  # Restore using default backup directory
+  ./restore_mongo_dump.sh --full                           # Restore the full dump
+  ./restore_mongo_dump.sh --workdir /custom/dir            # Use a custom directory
 
 The script must be executed from inside the devcontainer so it can reach the
 MongoDB service at host "db".
@@ -28,7 +28,7 @@ USAGE
 }
 
 dump_type="small"
-workdir="/tmp/sefaria-mongo"
+workdir="/app/.devcontainer/sefaria-mongo-backup"
 keep_archive=false
 force_download=false
 
@@ -145,7 +145,10 @@ fi
 restore_path="./$restore_dir"
 
 echo "Extracting archive..."
-rm -rf "$restore_path"
+if [[ -d "$restore_path" ]]; then
+    echo "Cleaning previous extraction at $restore_path..."
+    rm -rf "$restore_path"
+fi
 tar -xzf "$archive_name"
 
 if [[ ! -d "$restore_path" ]]; then

@@ -73,44 +73,38 @@ Automatically installed:
 
 ## 🗄️ MongoDB Database Setup
 
-The devcontainer needs a MongoDB dump to function properly. You have two options:
+### Automatic Setup (Default)
 
-### Option 1: Small Dump (Recommended)
+No manual steps required. On first launch, the devcontainer:
 
-Best for most development work. Contains all texts but no revision history.
+1. Checks whether MongoDB already contains data
+2. Uses any pre-loaded dump in `.devcontainer/sefaria-mongo-backup/`
+   - Prioritizes `dump_small.tar.gz` if both small and full are present
+3. If no dump is pre-loaded, downloads the small dump (`~3-4 GB`)
+4. Restores the dump and ensures the `history` collection exists for the small dataset
+
+If the automatic download fails (e.g., no internet connection), the setup stops with a clear error so you can resolve the issue or provide a dump manually.
+
+### Pre-Loading Dumps (Optional)
+
+For offline use or to control which dataset is restored:
+
+1. Create the directory `.devcontainer/sefaria-mongo-backup/`
+2. Place one of these archives inside:
+   - `dump_small.tar.gz` (recommended for most development)
+   - `dump.tar.gz` (full dump with revision history)
+3. Rebuild or reopen the devcontainer. The setup will automatically detect and use your archive.
+
+### Manual Restoration (Advanced)
+
+You can still run the helper script if you want to re-import data or switch datasets:
 
 ```bash
-# Download (in the container terminal)
-curl -O https://storage.googleapis.com/sefaria-mongo-backup/dump_small.tar.gz
-
-# Extract
-tar -xzf dump_small.tar.gz
-
-# Restore to MongoDB
-mongorestore --host db --port 27017
-
-# Create history collection (required for small dump)
-mongosh --host db --eval 'use sefaria; db.createCollection("history")'
+./.devcontainer/scripts/restore_mongo_dump.sh        # Small dump
+./.devcontainer/scripts/restore_mongo_dump.sh --full # Full dump
 ```
 
-Size: ~3-4 GB
-
-### Option 2: Full Dump
-
-Only needed if you're working with text revision history.
-
-```bash
-# Download (in the container terminal)
-curl -O https://storage.googleapis.com/sefaria-mongo-backup/dump.tar.gz
-
-# Extract
-tar -xzf dump.tar.gz
-
-# Restore to MongoDB
-mongorestore --host db --port 27017
-```
-
-Size: Larger (includes complete revision history)
+Use `--workdir`, `--keep-archive`, or `--force` for additional control (see `--help`).
 
 ## 🎮 Common Commands
 

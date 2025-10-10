@@ -127,41 +127,42 @@ echo ""
 # ====================
 # Step 4: MongoDB Database Setup
 # ====================
-echo "Step 4: Checking MongoDB database..."
+echo "Step 4: Setting up MongoDB database..."
 
-# Check if MongoDB has data
-# [RECOMMENDATION] Check for existing data before prompting for dump restoration
-collection_count=$(mongosh --host db --quiet --eval "db.getMongo().getDBNames().length")
+BACKUP_DIR="/app/.devcontainer/sefaria-mongo-backup"
+SMALL_DUMP="$BACKUP_DIR/dump_small.tar.gz"
+FULL_DUMP="$BACKUP_DIR/dump.tar.gz"
 
-if [ "$collection_count" -le 1 ]; then
-    print_warning "MongoDB is empty - load sample data before continuing"
-    echo ""
-    echo "======================================"
-    echo "MongoDB Database Setup Required"
-    echo "======================================"
-    echo ""
-    echo "Run the restore helper script from inside the devcontainer to download"
-    echo "and import a dataset:"
-    echo "   cd /app"
-    echo "   ./.devcontainer/scripts/restore_mongo_dump.sh"
-    echo ""
-    echo "Pass --full if you need revision history, or --help for options."
-    echo "The script handles extracting the dump, running mongorestore, and"
-    echo "creating the history collection when needed."
-    echo ""
-    echo "After the script completes, rerun this setup script or rerun"
-    echo "devcontainer up to finish configuring the environment."
-    echo "======================================"
-    echo ""
+# Check if MongoDB already has data
+non_system_db_count=$(mongosh --host db --quiet --eval "db.getMongo().getDBNames().filter(dbName => !['admin','config','local'].includes(dbName)).length")
+
+if [ "${non_system_db_count}" -eq 0 ]; then
+    print_info "MongoDB is empty - restoring dataset automatically..."
+    mkdir -p "$BACKUP_DIR"
+
+    if [ -f "$SMALL_DUMP" ]; then
+        print_info "Detected pre-loaded small dump at $SMALL_DUMP"
+        bash /app/.devcontainer/scripts/restore_mongo_dump.sh --small
+    elif [ -f "$FULL_DUMP" ]; then
+        print_info "Detected pre-loaded full dump at $FULL_DUMP"
+        bash /app/.devcontainer/scripts/restore_mongo_dump.sh --full
+    else
+        print_info "No pre-loaded dump found. Downloading small dump..."
+        bash /app/.devcontainer/scripts/restore_mongo_dump.sh --small
+    fi
+
+    print_success "MongoDB restore completed"
+
+    print_info "Ensuring history collection exists..."
+    mongosh --host db sefaria --quiet --eval "if (!db.getCollectionNames().includes('history')) { db.createCollection('history'); }" >/dev/null
+    print_success "History collection verified"
 else
     print_success "MongoDB already contains data"
-    
-    # Check if we need to create history collection (for small dump users)
-    # [DERIVED] History collection requirement from installation docs
     has_history=$(mongosh --host db sefaria --quiet --eval "db.getCollectionNames().includes('history')")
     if [ "$has_history" = "false" ]; then
-        print_info "History collection missing. Run the restore helper script to populate it:"
-        echo "   cd /app && ./.devcontainer/scripts/restore_mongo_dump.sh --small"
+        print_info "History collection missing. Creating it now..."
+        mongosh --host db sefaria --quiet --eval "db.createCollection('history')" >/dev/null
+        print_success "History collection created"
     fi
 fi
 
