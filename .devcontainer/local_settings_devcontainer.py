@@ -169,7 +169,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # [DERIVED] Standard Django static file settings
 STATIC_URL = '/static/'
-STATIC_ROOT = '/app/static/'
+STATIC_ROOT = '/app/static-collected'
 
 # ====================
 # Security Settings (Development)
