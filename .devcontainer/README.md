@@ -173,6 +173,20 @@ npm run build
 npm run watch
 ```
 
+### VS Code Launch Configurations
+
+The devcontainer seeds `.vscode/launch.json` with common debugging tasks so you can drive the stack directly from the **Run and Debug** panel:
+
+| Configuration | What it does |
+| ------------- | ------------ |
+| **Backend: Django runserver** | Runs `python manage.py runserver 0.0.0.0:8000` under `debugpy`, attaches VS Code’s Python debugger, honours `.env`, and enables framework-level breakpoints. |
+| **Frontend: webpack watch** | Executes `npm run watch-client` in an integrated terminal so webpack rebuilds bundles on save. Exit the debug session to stop the watcher. |
+| **SSR: npm start** | Launches `npm run start` with Node’s debugger attached and auto-restart enabled. |
+| **Dev: backend + frontend** | Compound session that starts both **Backend** and **Frontend** configurations together. |
+| **Dev: backend + frontend + SSR** | Compound session that starts all three configurations in parallel. |
+
+> ℹ️ **Tip:** If you customize `.vscode/launch.json`, the post-create hook will respect your local changes. Delete the file and rebuild the container to regenerate the defaults from `.devcontainer/launch.template.json`.
+
 ## 🌐 Accessing Services
 
 Once the servers are running, you can access:

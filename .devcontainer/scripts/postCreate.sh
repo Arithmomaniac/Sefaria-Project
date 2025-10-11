@@ -204,7 +204,42 @@ print_success "Frontend assets built"
 echo ""
 
 # ====================
-# Step 7: Final Setup
+# Step 7: Bootstrapping VS Code debug configuration
+# ====================
+# [RECOMMENDATION] Provide default debug targets while keeping per-developer overrides optional.
+# [DERIVED] Runs only when the devcontainer is opened in VS Code Desktop (REMOTE_CONTAINERS_IPC)
+#           or GitHub Codespaces (CODESPACES=true). Skips other entrypoints such as devcontainer CLI.
+echo "Step 7: Bootstrapping VS Code debug configuration..."
+
+debug_env=""
+if [[ "${CODESPACES:-}" == "true" ]]; then
+    debug_env="GitHub Codespaces"
+elif [[ -n "${REMOTE_CONTAINERS_IPC:-}" ]]; then
+    debug_env="VS Code Desktop"
+fi
+
+if [[ -n "${debug_env}" ]]; then
+    print_info "Detected ${debug_env} environment - ensuring .vscode/launch.json"
+    launch_template=".devcontainer/launch.template.json"
+    launch_target=".vscode/launch.json"
+
+    if [[ ! -f "${launch_template}" ]]; then
+        print_warning "Launch template ${launch_template} not found; skipping debug configuration bootstrap"
+    elif [[ -f "${launch_target}" ]]; then
+        print_warning "Existing ${launch_target} detected; leaving developer overrides intact"
+    else
+        mkdir -p ".vscode"
+        cp "${launch_template}" "${launch_target}"
+        print_success "Created ${launch_target} from template"
+    fi
+else
+    print_info "Not running inside VS Code - skipping debug configuration bootstrap"
+fi
+
+echo ""
+
+# ====================
+# Step 8: Final Setup
 # ====================
 echo "======================================"
 echo "🎉 Setup Complete!"
