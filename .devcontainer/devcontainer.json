@@ -31,6 +31,27 @@
   "shutdownAction": "stopCompose",
   
   
+  // CONTAINER RUNTIME SETTINGS
+  // ==========================
+  // [DERIVED FROM docker-compose.devcontainer.yml] Ensure container stays alive for VS Code attachment
+  // Source: Override of Django runserver command in devcontainer override compose file
+  // Reason: Allows VS Code to control application lifecycle without the container exiting
+  "overrideCommand": true,
+  
+  // [DERIVED FROM docker-compose.devcontainer.yml] Keep stdin open and allocate a pseudo-TTY
+  // Source: docker-compose.devcontainer.yml sets stdin_open=true and tty=true
+  // Reason: Provides better interactive shell experience inside the container
+  // [DERIVED FROM docker-compose.devcontainer.yml] Core Python/Node environment variables
+  // Source: docker-compose.devcontainer.yml environment section
+  // Reason: Keeps service configuration alongside other devcontainer runtime settings
+  "containerEnv": {
+    "DJANGO_SETTINGS_MODULE": "sefaria.settings", // [DERIVED] Ensures Django uses project settings module
+    "PYTHONUNBUFFERED": "1",                      // [DERIVED] Standard for Django development (shows logs immediately)
+    "NODE_ENV": "development",                    // [RECOMMENDATION] Standard Node.js development flag
+    "PYTHONDONTWRITEBYTECODE": "1"                // [RECOMMENDATION] Prevents .pyc files when developing
+  },
+  
+  
   // DEVCONTAINER FEATURES
   // =====================
   // [RECOMMENDATION] Add development utilities not in base Dockerfile
@@ -180,20 +201,9 @@
   },
   
   
-  // PORT FORWARDING
-  // ===============
-  // [DERIVED FROM docker-compose.yml] All ports match existing service definitions
-  
-  "forwardPorts": [
-    8000,   // [DERIVED] Django web (docker-compose.yml web service, Dockerfile EXPOSE 8000)
-    3000,   // [DERIVED] Node.js SSR (docker-compose.yml node service)
-    27017,  // [DERIVED] MongoDB (docker-compose.yml db service)
-    6379,   // [DERIVED] Redis (docker-compose.yml cache service)
-    5433    // [DERIVED] PostgreSQL (docker-compose.yml postgres service, mapped from internal 5432)
-  ],
-  
-  // Port Attributes
-  // [RECOMMENDATION] User-friendly labels and notification preferences
+  // PORT METADATA
+  // =============
+  // [DERIVED FROM docker-compose.yml] Ports are published via docker-compose; attributes add UX context
   "portsAttributes": {
     "8000": {
       "label": "Django Web Server",
@@ -238,30 +248,12 @@
   // - Displays helpful commands
   
   
-  // CONTAINER USER
-  // ==============
-  // [DERIVED FROM Dockerfile] Container runs as root
-  // Source: No USER directive in Dockerfile means it runs as root
-  // Note: Could be changed to non-root for better security, but kept as root for simplicity
-  "remoteUser": "root",
-  
-  
-  // ENVIRONMENT VARIABLES
-  // =====================
-  // [DERIVED] Core Python/Node environment variables
-  
-  "remoteEnv": {
-    "PYTHONUNBUFFERED": "1",          // [DERIVED] Standard for Django development (shows logs immediately)
-    "NODE_ENV": "development"         // [RECOMMENDATION] Standard Node.js development flag
-  },
-  
-  
   // PERSISTENT VOLUMES
   // ==================
-  // [RECOMMENDATION] Persist bash history across container rebuilds
+  // [RECOMMENDATION] Persist bash history and container-built dependencies across rebuilds
   
   "mounts": [
-    "source=sefaria-bashhistory,target=/root/.bash_history,type=volume"
-    // Preserves command history for better developer experience
+    "source=sefaria-bashhistory,target=/root/.bash_history,type=volume", // Preserves command history for better developer experience
+    "type=volume,target=/app/node_modules"                               // [RECOMMENDATION] Prevent node_modules from being overwritten by host
   ]
 }
