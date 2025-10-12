@@ -93,9 +93,38 @@ print_success "PostgreSQL is ready"
 echo ""
 
 # ====================
-# Step 2: Configure Local Settings
+# Step 2: Configure Git
 # ====================
-echo "Step 2: Configuring local settings..."
+# [RECOMMENDATION] Prevent git dubious ownership warnings when editing through VS Code
+echo "Step 2: Configuring git ownership..."
+
+git config --global --add safe.directory /app
+print_success "Git safe.directory configured"
+
+echo ""
+
+# ====================
+# Step 3: Install Python Dependencies
+# ====================
+# [DERIVED] requirements.txt drives Django backend dependencies
+# [RECOMMENDATION] Upgrade pip and handle psycopg2 build failures gracefully
+echo "Step 3: Installing Python dependencies..."
+
+cd /app
+print_info "Upgrading pip and installing requirements..."
+if ! (pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt); then
+    print_warning "Initial install failed, attempting psycopg2-binary fallback..."
+    sed -i 's/^psycopg2==2\.8\.6/psycopg2-binary==2.8.6/' requirements.txt
+    pip install --no-cache-dir -r requirements.txt
+fi
+print_success "Python dependencies installed"
+
+echo ""
+
+# ====================
+# Step 4: Configure Local Settings
+# ====================
+echo "Step 4: Configuring local settings..."
 
 # [DERIVED] Copy devcontainer-specific settings to sefaria/local_settings.py
 # Source file: .devcontainer/local_settings_devcontainer.py
@@ -109,25 +138,11 @@ fi
 
 echo ""
 
-# ====================
-# Step 3: Ensure Log Directory
-# ====================
-echo "Step 3: Setting up log directory..."
-
-# [DERIVED] Log directory location from installation docs
-# "Create a directory called log under the root project folder"
-if [ ! -d "/app/log" ]; then
-    mkdir -p /app/log
-fi
-chmod 777 /app/log
-print_success "Log directory ready"
-
-echo ""
 
 # ====================
-# Step 4: MongoDB Database Setup
+# Step 5: MongoDB Database Setup
 # ====================
-echo "Step 4: Setting up MongoDB database..."
+echo "Step 5: Setting up MongoDB database..."
 
 BACKUP_DIR="/app/.devcontainer/sefaria-mongo-backup"
 SMALL_DUMP="$BACKUP_DIR/dump_small.tar.gz"
@@ -169,9 +184,9 @@ fi
 echo ""
 
 # ====================
-# Step 5: Django Setup
+# Step 6: Django Setup
 # ====================
-echo "Step 5: Running Django migrations..."
+echo "Step 6: Running Django migrations..."
 
 # [DERIVED] Django migrations: Standard Django setup step
 # Mentioned in installation docs: "Run Django migrations"
@@ -182,17 +197,22 @@ print_success "Django migrations completed"
 echo ""
 
 # ====================
-# Step 6: Frontend Setup
+# Step 7: Frontend Setup
 # ====================
-echo "Step 6: Building frontend assets..."
+echo "Step 7: Building frontend assets..."
 
-# Check if node_modules exists, if not install
-# [RECOMMENDATION] Avoid rebuilding if already present (from Dockerfile)
-if [ ! -d "/app/node_modules" ]; then
+# Check if node_modules is missing or empty (named volume mounts as empty dir)
+if [ ! -d "/app/node_modules" ] || [ -z "$(ls -A /app/node_modules 2>/dev/null)" ]; then
     print_info "Installing Node.js dependencies..."
     npm install
     print_success "Node.js dependencies installed"
 fi
+
+# Run npm setup script (installs nodemon, babel-cli, forever globally)
+# [DERIVED] Mirrors manual 'npm run setup' instructions
+print_info "Running npm setup tasks (npm run setup)..."
+npm run setup
+print_success "npm setup completed"
 
 # Build client-side bundles
 # [DERIVED] npm run build-client from package.json scripts
@@ -204,12 +224,12 @@ print_success "Frontend assets built"
 echo ""
 
 # ====================
-# Step 7: Bootstrapping VS Code debug configuration
+# Step 8: Bootstrapping VS Code debug configuration
 # ====================
 # [RECOMMENDATION] Provide default debug targets while keeping per-developer overrides optional.
 # [DERIVED] Runs only when the devcontainer is opened in VS Code Desktop (REMOTE_CONTAINERS_IPC)
 #           or GitHub Codespaces (CODESPACES=true). Skips other entrypoints such as devcontainer CLI.
-echo "Step 7: Bootstrapping VS Code debug configuration..."
+echo "Step 8: Bootstrapping VS Code debug configuration..."
 
 debug_env=""
 if [[ "${CODESPACES:-}" == "true" ]]; then
@@ -239,7 +259,7 @@ fi
 echo ""
 
 # ====================
-# Step 8: Final Setup
+# Step 9: Final Setup
 # ====================
 echo "======================================"
 echo "🎉 Setup Complete!"

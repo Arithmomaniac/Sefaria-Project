@@ -1,11 +1,11 @@
 {
   // BASIC CONFIGURATION
   // ====================
-  
+
   // [RECOMMENDATION] Descriptive name for the devcontainer
   // Source: Standard devcontainer practice
   "name": "Sefaria Development Environment",
-  
+
   // [DERIVED FROM docker-compose.yml] Uses existing docker-compose infrastructure
   // Source: docker-compose.yml defines services: web, db, cache, node, postgres
   // Reason: Leverages existing service definitions rather than duplicating them
@@ -13,31 +13,31 @@
     "../docker-compose.yml",                    // [DERIVED] Base services from existing config
     "docker-compose.devcontainer.yml"           // [ADDED] Development-specific overrides
   ],
-  
+
   // [DERIVED FROM docker-compose.yml] Connect to the 'web' service
   // Source: docker-compose.yml has 'web' as the main Django application service
   // Reason: This is where the Django app and development tools should run
   "service": "web",
-  
+
   // [DERIVED FROM Dockerfile] Workspace folder matches container working directory
   // Source: Dockerfile line 5: "WORKDIR /app"
   // Source: docker-compose.yml mounts current dir to /app
   // Reason: Maintains consistency with existing container configuration
   "workspaceFolder": "/app",
-  
+
   // [RECOMMENDATION] Stop all compose services when VS Code closes
   // Source: Standard practice for multi-service devcontainers
   // Reason: Clean shutdown of all services (MongoDB, Redis, PostgreSQL, Node)
   "shutdownAction": "stopCompose",
-  
-  
+
+
   // CONTAINER RUNTIME SETTINGS
   // ==========================
   // [DERIVED FROM docker-compose.devcontainer.yml] Ensure container stays alive for VS Code attachment
   // Source: Override of Django runserver command in devcontainer override compose file
   // Reason: Allows VS Code to control application lifecycle without the container exiting
   "overrideCommand": true,
-  
+
   // [DERIVED FROM docker-compose.devcontainer.yml] Keep stdin open and allocate a pseudo-TTY
   // Source: docker-compose.devcontainer.yml sets stdin_open=true and tty=true
   // Reason: Provides better interactive shell experience inside the container
@@ -50,83 +50,71 @@
     "NODE_ENV": "development",                    // [RECOMMENDATION] Standard Node.js development flag
     "PYTHONDONTWRITEBYTECODE": "1"                // [RECOMMENDATION] Prevents .pyc files when developing
   },
-  
-  
+
+
   // DEVCONTAINER FEATURES
   // =====================
-  // [RECOMMENDATION] Add development utilities not in base Dockerfile
-  // Source: Standard devcontainer best practices for development workflow
-  
+  // [RECOMMENDATION] Use features only for tooling not handled in Dockerfile
+  // Source: System packages now installed directly via .devcontainer/Dockerfile
+
   "features": {
-    // Git is needed for version control inside the container
-    "ghcr.io/devcontainers/features/git:1": {
-      "version": "latest"
-    },
-    
-    // GitHub CLI for interacting with GitHub from within container
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "version": "latest"
-    },
-    
-    // Common utilities including zsh for better developer experience
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
-      "username": "root"              // [DERIVED] Matches container user from Dockerfile
+    // [DERIVED] Node.js 20 required for webpack builds (package.json scripts)
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
     }
   },
-  
-  
+
+
   // VS CODE CUSTOMIZATIONS
   // ======================
-  
+
   "customizations": {
     "vscode": {
-      
+
       // EXTENSIONS
       // ----------
       // [RECOMMENDATION] Extensions for Python/Django/React development
       // Source: Analysis of project tech stack from requirements.txt and package.json
-      
+
       "extensions": [
         // Python Development
         // [DERIVED] Python 3.9 is core language (dev_docker/Dockerfile, requirements.txt)
         "ms-python.python",           // Python IntelliSense, debugging, linting
         "ms-python.vscode-pylance",   // Fast, feature-rich language server
         "ms-python.debugpy",          // Python debugger
-        
+
         // Django Support
         // [DERIVED] Django 1.11 detected in requirements.txt
         "batisteo.vscode-django",     // Django template syntax highlighting
-        
+
         // JavaScript/React Development
         // [DERIVED] React 16.8.6 in package.json, extensive JS/JSX codebase
         "dbaeumer.vscode-eslint",     // JavaScript/TypeScript linting
         "esbenp.prettier-vscode",     // Code formatting
-        
+
         // Database Tools
         // [DERIVED] MongoDB 4.4 from docker-compose.yml
         "mongodb.mongodb-vscode",     // MongoDB connection and query tools
-        
+
         // Docker Support
         // [RECOMMENDATION] Useful for managing containers while developing
         "ms-azuretools.vscode-docker",
-        
+
         // Git Tools
         // [RECOMMENDATION] Enhanced Git visualization
         "eamodio.gitlens",
-        
+
         // General Utilities
         // [RECOMMENDATION] Spell checking for documentation and comments
         "streetsidesoftware.code-spell-checker"
       ],
-      
-      
+
+
       // SETTINGS
       // --------
-      
+
       "settings": {
-        
+
         // Python Configuration
         // [DERIVED] Python path from devcontainer Dockerfile installation
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -134,7 +122,7 @@
         "python.linting.pylintEnabled": false,        // [RECOMMENDATION] Avoid pylint overhead
         "python.formatting.provider": "none",         // [RECOMMENDATION] Use external formatter
         "python.analysis.typeCheckingMode": "basic",  // [RECOMMENDATION] Basic type checking
-        
+
         // Editor Settings
         // [RECOMMENDATION] Standard professional development practices
         "editor.formatOnSave": true,
@@ -144,14 +132,14 @@
         "files.eol": "\n",                            // [RECOMMENDATION] Unix line endings
         "files.insertFinalNewline": true,             // [RECOMMENDATION] POSIX standard
         "files.trimTrailingWhitespace": true,         // [RECOMMENDATION] Clean code
-        
+
         // Language-Specific Formatting
         // [DERIVED] Python uses 4 spaces (standard Python convention, PEP 8)
         "[python]": {
           "editor.defaultFormatter": "ms-python.python",
           "editor.tabSize": 4
         },
-        
+
         // [DERIVED] JavaScript/React typically uses 2 spaces (common in React ecosystem)
         "[javascript]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -161,24 +149,24 @@
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.tabSize": 2
         },
-        
+
         // [RECOMMENDATION] JSON standard is 2 spaces
         "[json]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.tabSize": 2
         },
-        
+
         // Terminal Settings
-        // [RECOMMENDATION] Use zsh added via features
-        "terminal.integrated.defaultProfile.linux": "zsh",
-        
+        // [DERIVED] Base image defaults to bash; retain for consistency
+        "terminal.integrated.defaultProfile.linux": "bash",
+
         // File Associations
         // [DERIVED] Project uses Django templates (HTML) and React (JSX)
         "files.associations": {
           "*.html": "html",                          // Django templates
           "*.js": "javascriptreact"                  // React components in .js files
         },
-        
+
         // Exclude Patterns
         // [DERIVED] Standard Python/Node.js build artifacts and caches
         "files.exclude": {
@@ -188,7 +176,7 @@
           "**/node_modules": true,                   // Node.js dependencies
           "**/.git": true                            // Git internal directory
         },
-        
+
         // Search Exclude Patterns
         // [DERIVED] Exclude large build artifacts from search
         "search.exclude": {
@@ -199,8 +187,8 @@
       }
     }
   },
-  
-  
+
+
   // PORT METADATA
   // =============
   // [DERIVED FROM docker-compose.yml] Ports are published via docker-compose; attributes add UX context
@@ -228,12 +216,12 @@
       "onAutoForward": "silent"       // [RECOMMENDATION] Database, no user notification needed
     }
   },
-  
-  
+
+
   // LIFECYCLE SCRIPTS
   // =================
   // [RECOMMENDATION] Automated setup and status scripts
-  
+
   "postCreateCommand": "bash .devcontainer/scripts/postCreate.sh",
   // Runs once after container creation:
   // - Waits for services (MongoDB, Redis, PostgreSQL)
@@ -241,17 +229,22 @@
   // - Guides MongoDB dump restoration
   // - Runs Django migrations
   // - Builds frontend assets
-  
+
   "postStartCommand": "bash .devcontainer/scripts/postStart.sh",
   // Runs on each container start:
   // - Quick health checks
   // - Displays helpful commands
-  
-  
+
+  // CONTAINER USER
+  // ==============
+  // [RECOMMENDATION] Match historical setup where development ran as root to avoid permission issues
+  "remoteUser": "root",
+
+
   // PERSISTENT VOLUMES
   // ==================
   // [RECOMMENDATION] Persist bash history and container-built dependencies across rebuilds
-  
+
   "mounts": [
     "source=sefaria-bashhistory,target=/root/.bash_history,type=volume", // Preserves command history for better developer experience
     "type=volume,target=/app/node_modules"                               // [RECOMMENDATION] Prevent node_modules from being overwritten by host

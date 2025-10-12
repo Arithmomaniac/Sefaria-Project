@@ -75,7 +75,7 @@ CACHES = {
         "TIMEOUT": 60 * 60 * 24 * 30,
     },
     "shared": {
-        "BACKEND": "django_redis.cache.RedisCache", 
+        "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://cache:6379/1",  # [DERIVED] Service name 'cache' from docker-compose.yml
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -169,7 +169,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # [DERIVED] Standard Django static file settings
 STATIC_URL = '/static/'
-STATIC_ROOT = '/app/static-collected'
+STATIC_ROOT = '/app/static-collected/'
 
 # ====================
 # Security Settings (Development)
